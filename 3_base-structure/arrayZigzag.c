@@ -2,13 +2,13 @@
 
 #include <stdio.h>
 
-#define SIZE 100
+#define N 100
 
-void printArray(arr[][N])
+void printArray(int arr[][N],int n)
 {
-	for (int r = 0; r < N; r++)
+	for (int r = 0; r < n; r++)
 	{
-		for (int c = 0; c < N; c++)
+		for (int c = 0; c < n; c++)
 			printf("%3d ", arr[r][c]);
 		printf("\n");
 	}
@@ -17,9 +17,9 @@ void printArray(arr[][N])
 
 void zigzag(int n)
 {
-	int A[SIZE][SIZE];
+	int A[N][N];
 
-	value = 1;
+	int value = 1;
 	for (int i = 0; i < n; i++)
 	{
 		if (i % 2 == 0)
@@ -29,7 +29,7 @@ void zigzag(int n)
 			for (int j = n - 1; j >= 0; j--, value++)
 				A[i][j] = value;
 	}
-	printArray(A);
+	printArray(A,n);
 }
 
 int main()
