@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <Windows.h>
 
 #define MAX_ELEMENT 100
 #define MAX_STACK_SIZE 100
@@ -17,7 +16,7 @@ typedef struct {
 }StackType;
 
 // stack
-void init_stack(StackType *s)
+void init_stack(StackType* s)
 {
 	s->top = -1;
 }
@@ -43,7 +42,7 @@ int pop(StackType* s)
 }
 
 // heap
-void init_heap(HeapType *h)
+void init_heap(HeapType* h)
 {
 	h->heap_size = 0;
 }
@@ -116,6 +115,7 @@ int main()
 	printHeap(&h);
 	printf("\n");
 
-	printf("힙의 마지막 노드 %d의 값은 %d\n", findLastNode(1, h.heap_size), h.heap[findLastNode(1, h.heap_size)]);
+	int last = findLastNode(1, h.heap_size);
+	printf("힙의 마지막 노드 %d의 값은 %d\n", last, h.heap[last]);
 	return 0;
 }
