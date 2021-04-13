@@ -174,4 +174,5 @@ int main()
 
     printList(&list);
     printf("%d\n", countInversion(&list));
+    return 0;
 }
