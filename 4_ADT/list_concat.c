@@ -39,7 +39,7 @@ void addFirst(LinkedListType* L, int item)
 
 void concat(LinkedListType* L1, LinkedListType* L2)
 {
-    ListNode* prev = NULL;
+    ListNode* prev;
     if (!L1->head)
         L1->head = L2->head;
     else
