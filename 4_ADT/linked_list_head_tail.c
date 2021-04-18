@@ -8,6 +8,11 @@ typedef struct node {
 	struct node* prev, * next;
 }node;
 
+typedef struct {
+	node* head;
+	node* tail;
+}LinkedList;
+
 void* xmalloc(size_t size)
 {
 	void* p;
@@ -28,11 +33,6 @@ node* newnode(int data)
 	newnode->next = NULL;
 	return newnode;
 }
-
-typedef struct {
-	node* head;
-	node* tail;
-}LinkedList;
 
 void init(LinkedList *l)
 {

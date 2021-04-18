@@ -2,38 +2,29 @@
 
 #include <stdio.h>
 
-#define SIZE 100
-
-void printArray(arr[][N])
+void rHanoi(int n, char from, char aux, char to)
 {
-	for (int r = 0; r < N; r++)
+	if (n == 1)
 	{
-		for (int c = 0; c < N; c++)
-			printf("%3d ", arr[r][c]);
-		printf("\n");
+		printf("Disk %d : %c -> %c\n", n, from, to);
+		return;
 	}
-
+	else
+	{
+		rHanoi(n - 1, from, to, aux);
+		printf("Disk %d : %c -> %c\n", n, from, to);
+		rHanoi(n - 1, aux, from, to);
+	}
 }
 
-void zigzag(int n)
+void hanoi(int n)
 {
-	int A[SIZE][SIZE];
-
-	value = 1;
-	for (int i = 0; i < n; i++)
-	{
-		if (i % 2 == 0)
-			for (int j = 0; j < n; j++, value++)
-				A[i][j] = value;
-		else
-			for (int j = n - 1; j >= 0; j--, value++)
-				A[i][j] = value;
-	}
-	printArray(A);
+	rHanoi(n, 'A', 'B', 'C');
+	return;
 }
 
 int main()
 {
-	zigzag(5);
+	hanoi(4);
 	return 0;
 }
