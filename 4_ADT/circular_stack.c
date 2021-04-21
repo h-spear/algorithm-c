@@ -41,7 +41,7 @@ element pop(StackType* s)
 	if (!is_empty(s))
 	{
 		int data = s->data[s->top];
-		if(s->n !=0)
+		if (s->n != 0)
 			s->n--;
 		s->top = (s->top - 1 + SIZE) % SIZE;
 		return data;
@@ -56,9 +56,11 @@ element top(StackType* s)
 
 void print(StackType* s)
 {
+	int t = s->top;
 	for (int i = 0; i < s->n; i++)
 	{
-		printf("%d ", s->data[i]);
+		printf("%d ", s->data[t]);
+		t = (t - 1 + SIZE) % SIZE;
 	}
 	printf("\n");
 }

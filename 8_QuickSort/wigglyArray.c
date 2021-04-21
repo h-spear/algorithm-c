@@ -69,7 +69,7 @@ void wigglyArray2(int list[], int n)
 		if ((i - 1) >= 0 && list[i] > list[i - 1])
 			SWAP(list[i], list[i - 1], temp);
 
-		if ((i + 1) < n && list[i] < list[i + 1])
+		if ((i + 1) < n && list[i] > list[i + 1])
 			SWAP(list[i], list[i + 1], temp);
 	}
 }

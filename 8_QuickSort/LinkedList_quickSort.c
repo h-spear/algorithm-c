@@ -13,8 +13,9 @@ typedef struct {
 }LinkedListType;
 
 typedef struct {
-	LinkedListType L1;
-	LinkedListType L2;
+	LinkedListType LT;
+	LinkedListType EQ;
+	LinkedListType GT;
 }partition_set;
 
 void init(LinkedListType* L)
@@ -91,68 +92,69 @@ void print(LinkedListType* L)
 
 partition_set partition(LinkedListType* L, int k)
 {
+	int p = get(L, k);
+	LinkedListType LT, EQ, GT;
 	partition_set result;
-	LinkedListType L1, L2;
+	init(&LT);
+	init(&EQ);
+	init(&GT);
 
-	L1.head = L->head;
-	node* p = L->head;
-	for (int i = 2; i <= k; i++)
-		p = p->next;
-	L2.head = p->next;
-	p->next = NULL;
-	L1.size = k;
-	L2.size = L->size - k;
-
-	result.L1 = L1;
-	result.L2 = L2;
+	while (size(L) != 0)
+	{
+		int e = removeFirst(L);
+		if (e < p)
+			addLast(&LT, e);
+		else if (e == p)
+			addLast(&EQ, e);
+		else
+			addLast(&GT, e);
+	}
+	result.LT = LT;
+	result.EQ = EQ;
+	result.GT = GT;
 	return result;
 }
 
-LinkedListType merge(LinkedListType* L1, LinkedListType* L2)
+LinkedListType merge(LinkedListType* LT, LinkedListType* EQ, LinkedListType* GT)
 {
 	LinkedListType L;
 	init(&L);
 
-	while (size(L1) != 0 && size(L2) != 0)
-	{
-		if (get(L1, 1) <= get(L2, 1))
-			addLast(&L, removeFirst(L1));
-		else
-			addLast(&L, removeFirst(L2));
-	}
-	while (size(L1) != 0)
-		addLast(&L, removeFirst(L1));
-	while (size(L2) != 0)
-		addLast(&L, removeFirst(L2));
+	while (size(LT) != 0)
+		addLast(&L, removeFirst(LT));
+	while (size(EQ) != 0)
+		addLast(&L, removeFirst(EQ));
+	while (size(GT) != 0)
+		addLast(&L, removeFirst(GT));
+
 	return L;
 }
 
-void mergeSort(LinkedListType* L)
+void quickSort(LinkedListType* L)
 {
 	if (size(L) > 1)
 	{
-		partition_set p = partition(L, L->size / 2);
-		LinkedListType L1 = p.L1;
-		LinkedListType L2 = p.L2;
-		mergeSort(&L1);
-		mergeSort(&L2);
-		*L = merge(&L1, &L2);
+		int k = rand() % size(L) + 1;
+		partition_set q = partition(L, k);
+		quickSort(&q.LT);
+		quickSort(&q.GT);
+		*L = merge(&q.LT, &q.EQ, &q.GT);
 	}
-	return;
 }
 
 int main()
 {
 	LinkedListType L;
 	init(&L);
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
+
 	for (int i = 0; i < 15; i++)
 		addLast(&L, rand() % 100);
 
 	print(&L);
 	printf("\n");
 
-	mergeSort(&L);
+	quickSort(&L);
 	print(&L);
 	return 0;
 }

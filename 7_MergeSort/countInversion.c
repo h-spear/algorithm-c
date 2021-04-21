@@ -1,178 +1,177 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <Windows.h>
 
-typedef struct ListNode {
-    int data;
-    struct ListNode* link;
-}ListNode;
+typedef struct node {
+	int data;
+	struct node* next;
+}node;
 
 typedef struct {
-    ListNode* head;
-    int size;
+	node* head;
+	int size;
 }LinkedListType;
 
 typedef struct {
-    LinkedListType L1;
-    LinkedListType L2;
-}Set;
+	LinkedListType L1;
+	LinkedListType L2;
+}partition_set;
 
 void init(LinkedListType* L)
 {
-    L->head = NULL;
-    L->size = 0;
+	L->head = NULL;
+	L->size = 0;
 }
 
-void printList(LinkedListType* L)
+node* getnode()
 {
-    for (ListNode* p = L->head; p != NULL; p = p->link)
-        printf("[%d] -> ", p->data);
-    printf("NULL\n");
-}
-
-ListNode* getNode()
-{
-    ListNode* p;
-    p = (ListNode*)malloc(sizeof(ListNode));
-    if (!p)
-    {
-        perror("malloc");
-        exit(1);
-    }
-    return p;
-}
-
-int is_empty(LinkedListType* L)
-{
-    return (L->size == 0);
-}
-
-int get(LinkedListType* L, int pos)
-{
-    ListNode* p = L->head;
-    for (int i = 1; i < pos; i++)
-        p = p->link;
-    return p->data;
+	node* p;
+	p = (node*)malloc(sizeof(node));
+	if (!p)
+	{
+		perror("malloc");
+		exit(1);
+	}
+	return p;
 }
 
 void addLast(LinkedListType* L, int item)
 {
-    ListNode* node = getNode();
-    ListNode* p = L->head;
+	node* new = getnode();
+	node* p = L->head;
 
-    node->data = item;
-    node->link = NULL;
-    L->size++;
-    // 리스트가 비었을 때
-    if (!p)
-    {
-        L->head = node;
-        return;
-    }
+	new->data = item;
+	new->next = NULL;
 
-    for (; p->link != NULL; p = p->link)
-        ;
-    p->link = node;
+	if (p == NULL)
+	{
+		L->head = new;
+		L->size++;
+		return;
+	}
+	
+	for(;p->next!=NULL;p=p->next)
+		;
+	p->next = new;
+	L->size++;
+}
+
+int get(LinkedListType* L, int pos)
+{
+	node* p = L->head;
+	for (int i = 1; i < pos; i++)
+		p = p->next;
+	return p->data;
 }
 
 int removeFirst(LinkedListType* L)
 {
-    if (L->head == NULL)
-    {
-        printf("emptyListException...\n");
-        exit(1);
-    }
+	node* removed = L->head;
+	if (removed == NULL)
+		return -1;
 
-    int data;
-    ListNode* removed = L->head;
-    data = removed->data;
-    L->head = removed->link;
-    L->size--;
-    free(removed);
-    return data;
+	int data = removed->data;
+	L->head = removed->next;
+	L->size--;
+	free(removed);
+	return data;
 }
 
-Set partition(LinkedListType* L, int k)
+int size(LinkedListType* L)
 {
-
-    Set result;
-    LinkedListType L1, L2;
-    ListNode* p = L->head;
-
-    L1.head = p;
-    L1.size = k;
-    L2.size = L->size - k;
-
-    for (int i = 1; i < k; i++)
-        p = p->link;
-
-    L2.head = p->link;
-    p->link = NULL;
-
-    result.L1 = L1;
-    result.L2 = L2;
-    return result;
+	return L->size;
 }
 
-LinkedListType merge(LinkedListType L1, LinkedListType L2, int* cnt)
+void print(LinkedListType* L)
 {
-    LinkedListType L;
-    init(&L);
-
-    while (!is_empty(&L1) && !is_empty(&L2))
-    {
-        if (get(&L1, 1) <= get(&L2, 1))
-        { 
-            addLast(&L, removeFirst(&L1));
-        }
-        else
-        {
-            *cnt += L1.size;
-            addLast(&L, removeFirst(&L2));
-        }
-    }
-    while (!is_empty(&L1))
-        addLast(&L, removeFirst(&L1));
-    while (!is_empty(&L2))
-        addLast(&L, removeFirst(&L2));
-    return L;
+	for (node* p = L->head; p != NULL; p = p->next)
+		printf("%d -> ", p->data);
+	printf("NULL\n");
 }
 
-void mergeSort(LinkedListType* L, int* cnt)
+partition_set partition(LinkedListType* L, int k)
 {
-    LinkedListType L1, L2;
-    Set set;
+	partition_set result;
+	LinkedListType L1, L2;
 
-    if (L->size > 1)
-    {
-        set = partition(L, L->size / 2);
-        L1 = set.L1;
-        L2 = set.L2;
-        mergeSort(&L1, cnt);
-        mergeSort(&L2, cnt);
-        *L = merge(L1, L2, cnt);
-    }
+	L1.head = L->head;
+	node* p = L->head;
+	for (int i = 2; i <= k; i++)
+		p = p->next;
+	L2.head = p->next;
+	p->next = NULL;
+	L1.size = k;
+	L2.size = L->size - k;
+
+	result.L1 = L1;
+	result.L2 = L2;
+	return result;
+}
+
+LinkedListType merge(LinkedListType* L1, LinkedListType* L2, int* ptr)
+{
+	LinkedListType L;
+	init(&L);
+
+	while (size(L1) != 0 && size(L2) != 0)
+	{
+		if (get(L1, 1) <= get(L2, 1))
+			addLast(&L, removeFirst(L1));
+		else
+		{
+			*ptr += size(L1);
+			addLast(&L, removeFirst(L2));
+		}
+	}
+	while (size(L1) != 0)
+		addLast(&L, removeFirst(L1));
+	while (size(L2) != 0)
+		addLast(&L, removeFirst(L2));
+	return L;
+}
+
+void mergeSort(LinkedListType* L, int* ptr)
+{
+	if (size(L) > 1)
+	{
+		partition_set p = partition(L, L->size / 2);
+		LinkedListType L1 = p.L1;
+		LinkedListType L2 = p.L2;
+		mergeSort(&L1, ptr);
+		mergeSort(&L2, ptr);
+		*L = merge(&L1, &L2, ptr);
+	}
+	return;
 }
 
 int countInversion(LinkedListType* L)
 {
-    int cnt = 0;
-    int* pointer = &cnt;
-    mergeSort(L, pointer);
-    return cnt;
+	int cnt = 0;
+	int* ptr = &cnt;
+
+	mergeSort(L, ptr);
+	return cnt;
 }
 
 int main()
 {
-    LinkedListType list;
-    init(&list);
+	LinkedListType L;
+	init(&L);
+	srand(time(NULL));
 
-    srand((unsigned int)time(NULL));
-    for (int i = 0; i < 10; i++)
-        addLast(&list, rand() % 100);
+	addLast(&L, 6);
+	addLast(&L, 1);
+	addLast(&L, 8);
+	addLast(&L, 2);
+	addLast(&L, 3);
+	addLast(&L, 5);
+	addLast(&L, 7);
+	addLast(&L, 4);
 
-    printList(&list);
-    printf("%d\n", countInversion(&list));
-    return 0;
+
+	print(&L);
+	printf("\n");
+
+	printf("%d", countInversion(&L));
+	return 0;
 }
