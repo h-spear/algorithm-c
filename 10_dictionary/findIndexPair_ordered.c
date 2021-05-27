@@ -8,7 +8,7 @@ typedef struct {
 	int idx;
 }Dict;
 
-int findElement(Dict D[], int key)
+int findElement(Dict D[], float key)
 {
 	int mid;
 	int left = 0, right = SIZE - 1;
