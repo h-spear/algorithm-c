@@ -1,10 +1,11 @@
+#pragma warning(disable: 4996)
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX(a,b) ((a)>(b) ? (a) : (b))
-
 typedef struct TreeNode {
-	int key, height;
+	int key;
+	int height;
 	struct TreeNode* parent, * left, * right;
 }TreeNode;
 
@@ -12,30 +13,48 @@ typedef struct {
 	TreeNode* root;
 }TreeType;
 
+void* xmalloc(size_t size)
+{
+	void* p;
+	p = malloc(size);
+	if (!p)
+	{
+		perror("malloc");
+		exit(1);
+	}
+	return p;
+}
+
 void initTree(TreeType* T)
 {
-	T->root = (TreeNode*)malloc(sizeof(TreeNode));
+	T->root = (TreeNode*)xmalloc(sizeof(TreeNode));
 	T->root->parent = T->root->left = T->root->right = NULL;
 	T->root->height = 0;
 }
 
-int isExternal(TreeNode* w)
+int isExternal(TreeNode* z)		// 모조노드인가?
 {
-	return (w->left == NULL && w->right == NULL);
+	return (z->left == NULL && z->right == NULL);
 }
 
-void expandExternal(TreeNode* w)
+int isInternal(TreeNode* z)
 {
-	TreeNode* l = (TreeNode*)malloc(sizeof(TreeNode));
-	TreeNode* r = (TreeNode*)malloc(sizeof(TreeNode));
+	return (z->left != NULL || z->right != NULL);
+}
+
+void expandExternal(TreeNode* z)
+{
+	TreeNode* l = (TreeNode*)xmalloc(sizeof(TreeNode));
+	TreeNode* r = (TreeNode*)xmalloc(sizeof(TreeNode));
 	l->left = NULL;
 	l->right = NULL;
-	l->parent = w;
+	l->parent = z;
 	r->left = NULL;
 	r->right = NULL;
-	r->parent = w;
-	w->left = l;
-	w->right = r;
+	r->parent = z;
+	z->left = l;
+	z->right = r;
+	return;
 }
 
 TreeNode* sibling(TreeNode* z)
@@ -52,11 +71,8 @@ TreeNode* reduceExternal(TreeType* T, TreeNode* z)
 	TreeNode* g = w->parent;
 	TreeNode* zs = sibling(z);
 	zs->parent = g;
-
-	if (g == NULL)	// 자신이 루트
-	{
+	if (g == NULL)
 		T->root = zs;
-	}
 	else
 	{
 		if (w == g->left)
@@ -67,18 +83,6 @@ TreeNode* reduceExternal(TreeType* T, TreeNode* z)
 	free(z);
 	free(w);
 	return zs;
-}
-
-TreeNode* treeSearch(TreeNode* v, int k)
-{
-	if (isExternal(v))
-		return v;
-	if (k == v->key)
-		return v;
-	else if (k < v->key)
-		return treeSearch(v->left, k);
-	else
-		return treeSearch(v->right, k);
 }
 
 TreeNode* restructure(TreeType* T, TreeNode* x)
@@ -135,7 +139,7 @@ TreeNode* restructure(TreeType* T, TreeNode* x)
 		T->root = b;
 		b->parent = NULL;
 	}
-	else if(z->parent->left== z)
+	else if (z->parent->left == z)
 	{
 		z->parent->left = b;
 		b->parent = z->parent;
@@ -151,39 +155,60 @@ TreeNode* restructure(TreeType* T, TreeNode* x)
 	T0->parent = a;
 	a->right = T1;
 	T1->parent = a;
-	a->height = MAX(T0->height, T1->height) + 1;
+	a->height = max(T0->height, T1->height) + 1;
 
 	// 5.
 	c->left = T2;
 	T2->parent = c;
 	c->right = T3;
 	T3->parent = c;
-	c->height = MAX(T2->height, T3->height) + 1;
+	c->height = max(T2->height, T3->height) + 1;
 
 	// 6.
 	b->left = a;
 	a->parent = b;
 	b->right = c;
 	c->parent = b;
-	b->height = MAX(a->height, c->height) + 1;
+	b->height = max(a->height, c->height) + 1;
 
 	return b;
 }
 
-int heightUpdateAndBalanceCheck(TreeNode* w)
+TreeNode* treeSearch(TreeNode* v, int k)
+{
+	if (isExternal(v))
+		return v;
+	if (k == v->key)
+		return v;
+	else if (k < v->key)
+		return treeSearch(v->left, k);
+	else
+		return treeSearch(v->right, k);
+}
+
+int findElement(TreeType* T, int k)
+{
+	TreeNode* w = treeSearch(T->root, k);
+	if (isExternal(w))
+		return -1;	//NoSuchKey
+	else
+		return w->key;
+}
+
+int heightUpdateAndBalanceCheck(TreeNode* z)
 {
 	TreeNode* l, * r;
 	int b;
 
-	if (w == NULL)
+	if (z == NULL)
 		return 1;
 
-	l = w->left;
-	r = w->right;
+	l = z->left;
+	r = z->right;
 
-	w->height = MAX(r->height, l->height) + 1;
+	z->height = max(r->height, l->height) + 1;
 	b = r->height - l->height;
-	
+
 	if (b * b < 2)
 		return 1;
 	else
@@ -195,27 +220,26 @@ void searchAndFixAfterInsertion(TreeType* T, TreeNode* w)
 	TreeNode* z = w;
 	TreeNode* y, * x;
 
-	// 1. ---------------
+	// 1. w에서 루트로 가면서 처음 만나는 불균형 노드 z
 	while (heightUpdateAndBalanceCheck(z))
 	{
 		if (z == NULL)
-			return;
+			return;		// z가 없다면 return
 		z = z->parent;
 	}
 
-	// 2. ---------------
+	// 2. z의 높은 자식 y
 	if (z->left->height > z->right->height)
 		y = z->left;
 	else
 		y = z->right;
 
 
-	// 3. ---------------
+	// 3. y의 높은 자식 x
 	if (y->left->height > y->right->height)
 		x = y->left;
-	else if (y->left->height < y->right->height)
+	else if(y->left->height < y->right->height)
 		x = y->right;
-
 
 	// 4. ---------------
 	restructure(T, x);
@@ -224,13 +248,13 @@ void searchAndFixAfterInsertion(TreeType* T, TreeNode* w)
 void insertItem(TreeType* T, int k)
 {
 	TreeNode* w = treeSearch(T->root, k);
-	if (!isExternal(w))
-		return;
+	if (isInternal(w))	// !isExternal(w)
+		return;			// 이미 노드가 존재
 	else
 	{
 		w->key = k;
 		expandExternal(w);
-		searchAndFixAfterInsertion(T, w);
+		searchAndFixAfterInsertion(T, w);	// restructure
 	}
 }
 
@@ -287,31 +311,19 @@ int removeElement(TreeType* T, int k)
 	if (isExternal(w))
 		return 0;
 	z = w->left;
-	if (!isExternal(z))	// case1: z가 내부노드라면
+	if (!isExternal(z))
 		z = w->right;
 	if (isExternal(z))
 		zs = reduceExternal(T, z);
-
-	else		// case2: 자식이 둘 다 내부노드
+	else
 	{
 		z = inOrderSucc(w);
 		y = z->parent;
 		w->key = y->key;
 		zs = reduceExternal(T, z);
-
 	}
 	searchAndFixAfterRemoval(T, zs->parent);
 	return k;
-}
-
-int findElement(TreeType* T, int k)
-{
-	TreeNode* w = treeSearch(T->root, k);
-
-	if (isExternal(w))
-		return 0;
-	else
-		return w->key;
 }
 
 void preOrder(TreeNode* root)
@@ -323,26 +335,42 @@ void preOrder(TreeNode* root)
 	preOrder(root->right);
 }
 
+void postOrder(TreeNode* root)
+{
+	if (isExternal(root))
+		return;
+	postOrder(root->left);
+	postOrder(root->right);
+	printf("[%d] ", root->key);
+}
+
+void inOrder(TreeNode* root)
+{
+	if (isExternal(root))
+		return;
+	inOrder(root->left);
+	printf("[%d] ", root->key);
+	inOrder(root->right);
+}
+
 int main()
 {
-	TreeType* T = (TreeType*)malloc(sizeof(TreeType));
+	TreeType* T = (TreeType*)xmalloc(sizeof(TreeType));
 	initTree(T);
-
 	insertItem(T, 44);
 	insertItem(T, 17);
 	insertItem(T, 32);
-	preOrder(T->root); printf("\n");
 	insertItem(T, 78);
 	insertItem(T, 50);
 	insertItem(T, 88);
-	preOrder(T->root); printf("\n");
 	insertItem(T, 48);
 	insertItem(T, 62);
 	insertItem(T, 54);
-	preOrder(T->root); printf("\n");
 
 
 	removeElement(T, 32);
 	preOrder(T->root); printf("\n");
+	inOrder(T->root); printf("\n");
+	postOrder(T->root); printf("\n");
 	return 0;
 }
