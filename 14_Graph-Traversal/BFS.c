@@ -4,12 +4,13 @@
 
 #define TRUE 1
 #define FALSE 0
+#define MAX_QUEUE_SIZE 10
 
 typedef struct Edge {
 	int vNum1;
 	int vNum2;
+	int isTree;
 	struct Edge* next;
-	int directed;
 }Edge;
 
 typedef struct IncidentEdge {
@@ -20,8 +21,9 @@ typedef struct IncidentEdge {
 
 typedef struct Vertex {
 	int num;
-	struct Vertex* next;
+	int isVisited;
 	IncidentEdge* top;
+	struct Vertex* next;
 }Vertex;
 
 typedef struct {
@@ -30,6 +32,43 @@ typedef struct {
 	int vCount;
 	int eCount;
 }GraphType;
+
+typedef struct {
+	Vertex* data[MAX_QUEUE_SIZE];
+	int front, rear;
+}QueueType;
+
+void initQueue(QueueType* q)
+{
+	q->front = q->rear = 0;
+}
+
+int isEmpty(QueueType* q)
+{
+	return q->front == q->rear;
+}
+
+int isFull(QueueType* q)
+{
+	return (q->rear + 1) % MAX_QUEUE_SIZE == q->front;
+}
+
+void enqueue(QueueType* q, Vertex* item)
+{
+	if (isFull(q))
+		exit(1);
+	q->rear = (q->rear + 1) % MAX_QUEUE_SIZE;
+	q->data[q->rear] = item;
+	return;
+}
+
+Vertex* dequeue(QueueType* q)
+{
+	if (isEmpty(q))
+		exit(1);
+	q->front = (q->front + 1) % MAX_QUEUE_SIZE;
+	return q->data[q->front];
+}
 
 void* xmalloc(size_t size)
 {
@@ -50,58 +89,13 @@ void init(GraphType* G)
 	G->vCount = G->eCount = 0;
 }
 
-int vnumVertices(GraphType* G)
-{
-	return G->vCount;
-}
-
-int numEdges(GraphType* G)
-{
-	return G->eCount;
-}
-
-void vertices(GraphType* G)
-{
-	Vertex* p;
-	printf("정점(%02d) : ", G->vCount);
-	for (p = G->vHead; p != NULL; p = p->next)
-		printf("%d ", p->num);
-	printf("\n");
-}
-
-void edges(GraphType* G)
-{
-	Edge* p;
-	printf("간선(%02d) : ", G->eCount);
-	for (p = G->eHead; p != NULL; p = p->next)
-		printf("(%d, %d) ", p->vNum1, p->vNum2);
-	printf("\n");
-}
-
-Vertex* aVertex(GraphType* G)
-{	// 그래프 내 아무 한 정점을 반환
-	int r = rand() % G->vCount;
-	Vertex* p = G->vHead;
-	for (int i = 0; i < r; i++, p = p->next)
-		;
-	return p;
-}
-
-int degree(Vertex* v)
-{
-	int deg = 0;
-	IncidentEdge* p;
-	for (p = v->top; p != NULL; p = p->next)
-		deg++;
-	return deg;
-}
-
 void insertVertex(GraphType* G, int num)
 {
 	Vertex* p = (Vertex*)xmalloc(sizeof(Vertex));
 	p->num = num;
-	p->top = NULL;
 	p->next = NULL;
+	p->top = NULL;
+	p->isVisited = FALSE;
 	Vertex* q = G->vHead;
 	G->vCount++;
 
@@ -147,7 +141,6 @@ void insertEdge(GraphType* G, int v1, int v2)
 	p->vNum1 = v1;
 	p->vNum2 = v2;
 	p->next = NULL;
-	p->directed = FALSE;
 	G->eCount++;
 
 	Edge* q = G->eHead;
@@ -165,28 +158,6 @@ void insertEdge(GraphType* G, int v1, int v2)
 	insertIncidentEdge(v, v1, p);
 }
 
-void insertDirectedEdge(GraphType* G, int v1, int v2)
-{	// v1->v2
-	Edge* p = (Edge*)xmalloc(sizeof(Edge));
-	p->vNum1 = v1;
-	p->vNum2 = v2;
-	p->next = NULL;
-	p->directed = TRUE;
-	G->eCount++;
-
-	Edge* q = G->eHead;
-	if (q == NULL)
-		G->eHead = p;
-	else
-	{
-		while (q->next != NULL)
-			q = q->next;
-		q->next = p;
-	}
-	Vertex* v = findVertex(G, v1);
-	insertIncidentEdge(v, v2, p);
-}
-
 void print(GraphType* G)
 {
 	Vertex* p = G->vHead;
@@ -200,11 +171,50 @@ void print(GraphType* G)
 	}
 }
 
+void BFS1(GraphType* G, Vertex* v)
+{
+	QueueType q;
+	initQueue(&q);
+	v->isVisited = TRUE;
+	enqueue(&q, v);
+	printf("[%d] ", v->num);
+
+	while (!isEmpty(&q))
+	{
+		v = dequeue(&q);
+		IncidentEdge* p;
+		for (p = v->top; p != NULL; p = p->next)
+		{
+
+			Vertex* w = findVertex(G, p->adjVertex);
+			if (w->isVisited == FALSE)
+			{
+				w->isVisited = TRUE;
+				printf("[%d] ", w->num);
+				enqueue(&q, w);
+			}
+		}
+	}
+}
+
+void BFS(GraphType* G)
+{
+	Vertex* p;
+	for (p = G->vHead; p != NULL; p = p->next)
+		p->isVisited = FALSE;
+
+	Edge* q;
+	for (q = G->eHead; q != NULL; q = q->next)
+		q->isTree = FALSE;
+
+	BFS1(G, G->vHead);
+	printf("\n");
+}
+
 int main()
 {
 	GraphType G;
 	init(&G);
-	srand((unsigned int)time(NULL));
 	for (int i = 1; i < 10; i++)
 		insertVertex(&G, i);
 
@@ -220,6 +230,10 @@ int main()
 	insertEdge(&G, 6, 8);
 	insertEdge(&G, 7, 9);
 	insertEdge(&G, 8, 9);
+
 	print(&G);
+	BFS(&G);
+	BFS(&G);
+	BFS(&G);
 	return 0;
 }
