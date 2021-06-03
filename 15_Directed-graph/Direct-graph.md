@@ -17,4 +17,3 @@
 - G\*은 G와 동일한 정점을 가진다.
 - G에 u로부터 v!=u로의 방향 경로가 존재한다면 G\*에 u로부터 v로의 방향간선이 존재한다.
 - Floyd-Warshall algorithm
-
