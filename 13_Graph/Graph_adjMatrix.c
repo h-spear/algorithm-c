@@ -9,78 +9,60 @@ typedef struct {
 	int n;
 }GraphType;
 
-void init(GraphType* G)
+void init(GraphType* g)
 {
-	G->n = 0;
+	g->n = 0;
 	for (int i = 0; i < MAX_VERTICES; i++)
 		for (int j = 0; j < MAX_VERTICES; j++)
-			G->adj_mat[i][j] = 0;
+			g->adj_mat[i][j] = 0;
 }
 
-void error(char* msg)
+void insertVertex(GraphType* g)
 {
-	fprintf(stderr, "%s", msg);
-	exit(1);
+	if (g->n > MAX_VERTICES - 1)
+		return;
+	g->n++;
 }
 
-void insertVertex(GraphType* G)
+void insertEdge(GraphType* g, int v1, int v2, int weight)
 {
-	if (G->n > MAX_VERTICES - 1)
-		error("정점 개수 초과\n");
-	G->n++;
+	if (v1 >= g->n || v2 >= g->n)
+		return;
+	g->adj_mat[v1][v2] = weight;
+	g->adj_mat[v2][v1] = weight;
 }
 
-void insertEdge(GraphType* G, int v1, int v2)
+void print(GraphType* g)
 {
-	if (v1 >= G->n || v2 >= G->n)
-		error("존재하지 않는 정점 번호");
-	G->adj_mat[v1][v2] = 1;
-	G->adj_mat[v2][v1] = 1;
-}
-
-void insertDirectedEdge(GraphType* G, int v1, int v2)
-{
-	if (v1 >= G->n || v2 >= G->n)
-		error("존재하지 않는 정점 번호");
-	G->adj_mat[v1][v2] = 1;
-}
-
-int areAdjacent(GraphType* G, int v1, int v2)
-{
-	return G->adj_mat[v1][v2];
-}
-
-void adjacentVertices(GraphType* G, int v)
-{
-	printf("%d의 인접정점 : ", v);
-	for (int i = 0; i < G->n; i++)
-		if (G->adj_mat[v][i] == 1)
-			printf("%d ", i);
-	printf("\n");
-}
-
-void print(GraphType* G)
-{
-	for (int i = 0; i < G->n; i++)
+	for (int i = 0; i < g->n; i++)
 	{
-		for (int j = 0; j < G->n; j++)
-			printf("%2d ", G->adj_mat[i][j]);
+		printf("정점 %d : ", i);
+		for (int j = 0; j < g->n; j++)
+			if (g->adj_mat[i][j] != 0)
+				printf("[%d (%d)] ", j, g->adj_mat[i][j]);
 		printf("\n");
 	}
 }
 
 int main()
 {
-	GraphType G;
-	init(&G);
+	GraphType g;
+	init(&g);
 
-	for (int i = 0; i < 4; i++)
-		insertVertex(&G);
-	insertEdge(&G, 0, 1);
-	insertEdge(&G, 0, 2);
-	insertEdge(&G, 0, 3);
-	insertEdge(&G, 1, 2);
-	insertEdge(&G, 2, 3);
-	print(&G);
+	for (int i = 0; i < 6; i++)
+		insertVertex(&g);
+
+	insertEdge(&g, 0, 1, 2);
+	insertEdge(&g, 0, 2, 6);
+	insertEdge(&g, 0, 4, 7);
+	insertEdge(&g, 1, 3, 7);
+	insertEdge(&g, 1, 2, 5);
+	insertEdge(&g, 2, 3, 9);
+	insertEdge(&g, 2, 4, 8);
+	insertEdge(&g, 3, 5, 4);
+	insertEdge(&g, 4, 5, 3);
+
+	print(&g);
+
 	return 0;
 }

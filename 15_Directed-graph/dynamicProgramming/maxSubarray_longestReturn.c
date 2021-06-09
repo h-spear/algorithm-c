@@ -27,50 +27,6 @@ void maxSubarray_straightforward(int A[], int n)
 	printf("interval (%d:%d)  maxSum : %d \n", maxi, maxj, maxSum);
 }
 
-void maxSubarray_runningSum(int A[], int n)
-{
-	int sum, maxi = 0, maxj = 0;
-	int maxSum = -INF;
-	for (int i = 0; i < n; i++)
-	{
-		sum = 0;
-		for (int j = i; j < n; j++)
-		{
-			sum = sum + A[j];
-			if (maxSum < sum)
-			{
-				maxSum = sum;
-				maxi = i;
-				maxj = j;
-			}
-		}
-	}
-	printf("interval (%d:%d)  maxSum : %d \n", maxi, maxj, maxSum);
-}
-
-void maxSubarray_initialSum(int A[], int n)
-{
-	int s[N + 1] = { 0 };
-	int maxSum = -INF;
-	int sum, maxi = 0, maxj = 0;
-
-	for (int i = 0; i < n; i++)
-		s[i + 1] = s[i] + A[i];
-
-	for (int i = 0; i < n; i++)
-		for (int j = i; j < n; j++)
-		{
-			sum = s[j + 1] - s[i];
-			if (maxSum < sum)
-			{
-				maxSum = sum;
-				maxi = i;
-				maxj = j;
-			}
-		}
-	printf("interval (%d:%d)  maxSum : %d \n", maxi, maxj, maxSum);
-}
-
 int lastPlusIndex(int s[],int n)
 {
 	for (int i = n; i >= 0; i--)
@@ -84,6 +40,7 @@ void maxSubarray(int A[], int n)
 	int s[N + 1] = { 0 };
 	int maxSum = -INF;
 	int maxi = 0, maxj = 0;
+	int maxCount = 0;
 
 	for (int i = 0; i < n; i++)
 	{
@@ -95,6 +52,17 @@ void maxSubarray(int A[], int n)
 				maxSum = s[i + 1];
 				maxi = lastPlusIndex(s, i);
 				maxj = i;
+				maxCount = i - maxi + 1;
+			}
+			if (maxSum == s[i + 1])
+			{
+				int count = i - lastPlusIndex(s, i);
+				if (count > maxCount)
+				{
+					maxCount = count;
+					maxi = lastPlusIndex(s, i);
+					maxj = i;
+				}
 			}
 		}
 		else
@@ -105,10 +73,11 @@ void maxSubarray(int A[], int n)
 				maxi = i;
 				maxj = i;
 				maxSum = s[i + 1];
+				maxCount = 1;
 			}
 		}
 	}
-	printf("interval (%d:%d)  maxSum : %d \n", maxi, maxj, maxSum);
+	printf("interval (%d:%d)  maxSum : %d  elementCount : %d\n", maxi, maxj, maxSum,maxCount);
 }
 
 int main()
@@ -122,10 +91,8 @@ int main()
 		printf("%3d ", A[i]);
 	printf("\n\n");
 
-	maxSubarray_straightforward(A, N);
-	maxSubarray_runningSum(A, N);
-	maxSubarray_initialSum(A, N);
 	maxSubarray(A, N);
+	maxSubarray_straightforward(A, N);
 	return 0;
 
 }

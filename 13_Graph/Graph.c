@@ -22,6 +22,7 @@ typedef struct Vertex {
 	int num;
 	struct Vertex* next;
 	IncidentEdge* top;
+	int eCount;
 }Vertex;
 
 typedef struct {
@@ -102,6 +103,7 @@ void insertVertex(GraphType* G, int num)
 	p->num = num;
 	p->top = NULL;
 	p->next = NULL;
+	p->eCount = 0;
 	Vertex* q = G->vHead;
 	G->vCount++;
 
@@ -121,6 +123,7 @@ void insertIncidentEdge(Vertex* v, int av, Edge* e)
 	p->adjVertex = av;
 	p->e = e;
 	p->next = NULL;
+	v->eCount++;
 
 	IncidentEdge* q = v->top;
 	if (q == NULL)
@@ -185,6 +188,91 @@ void insertDirectedEdge(GraphType* G, int v1, int v2)
 	}
 	Vertex* v = findVertex(G, v1);
 	insertIncidentEdge(v, v2, p);
+}
+
+void copyGraph(GraphType* G, GraphType* G2)
+{
+	Vertex* v;
+	for (v = G->vHead; v != NULL; v = v->next)
+		insertVertex(G2, v->num);
+
+	Edge* e;
+	for (e = G->eHead; e != NULL; e = e->next)
+		insertEdge(G2, e->vNum1, e->vNum2);
+}
+
+void removeIncidentEdge(Vertex* v, int av)
+{
+	IncidentEdge* p = v->top, * before = NULL;
+	if (p == NULL)
+		return;
+	for (; p->next != NULL; p = p->next)
+	{
+		if (p->adjVertex == av)
+			break;
+		before = p;
+	}
+
+	if (before != NULL)
+		before->next = p->next;
+	else
+		v->top = p->next;
+	free(p);
+	return;
+}
+
+void removeEdge(GraphType* G, Edge* e)
+{
+	Edge* p = G->eHead, * before = NULL;
+	if (p == NULL)
+		return;
+	for (; p->next != NULL; p = p->next)
+	{
+		if (p == e)
+			break;
+		before = p;
+	}
+
+	if (before != NULL)
+		before->next = p->next;
+	else
+		G->eHead = p->next;
+
+	Vertex* v = findVertex(G, e->vNum1);
+	removeIncidentEdge(v, e->vNum2);
+	v = findVertex(G, e->vNum2);
+	removeIncidentEdge(v, e->vNum1);
+	G->eCount--;
+
+	free(p);
+	return;
+}
+
+void removeVertex(GraphType* G, int v)
+{
+	Vertex* q = findVertex(G, v);
+	Vertex* p = G->vHead, * before = NULL;
+
+	for (int i = 0; i < q->eCount; i++)
+		removeEdge(G, q->top->e);
+
+	if (p == NULL)
+		return;
+	for (; p->next != NULL; p = p->next)
+	{
+		if (p == q)
+			break;
+		before = p;
+	}
+
+	if (before != NULL)
+		before->next = p->next;
+	else
+		G->vHead = p->next;
+
+	G->vCount--;
+	free(p);
+	return;
 }
 
 void print(GraphType* G)
